@@ -1,16 +1,13 @@
 from flask import Flask, render_template, request
-import requests
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import socket
-import whois
 import re
 from datetime import datetime
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
-import numpy as np
 
 app = Flask(__name__)
 
