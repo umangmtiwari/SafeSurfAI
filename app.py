@@ -383,5 +383,3 @@ def result():
     result = url+' is not a Phishing Site.' if prediction[0] == 1 else url+'is a Phishing Site'
     return render_template('index.html', features=features, result=result)
 
-if __name__ == '__main__':
-    app.run(debug=True)
