@@ -20,7 +20,7 @@ SafeSurfAI is a web application designed to detect phishing websites using a mac
 
 1. **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/SafeSurfAI.git
+    git clone https://github.com/umangmtiwari/SafeSurfAI.git
     cd SafeSurfAI
     ```
 
@@ -31,7 +31,7 @@ SafeSurfAI is a web application designed to detect phishing websites using a mac
 
 3. **Run the application**
     ```bash
-    python mobile.py
+    python app.py
     ```
 
 4. **Open your browser** and navigate to `http://127.0.0.1:5000/` to access SafeSurfAI.
