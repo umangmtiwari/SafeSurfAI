@@ -7,3 +7,4 @@ pandas==2.2.1
 joblib==1.4.0
 numpy
 python-whois
+gunicorn
