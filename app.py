@@ -1,34 +1,29 @@
 from flask import Flask, render_template, request
-import requests
+import joblib
+import pandas as pd
+import numpy as np
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+import requests
 import socket
 import whois
 import re
 from datetime import datetime
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-import numpy as np
 
 app = Flask(__name__)
 
-# Load the model
+# Load pre-trained model and scaler
+model = joblib.load('model/phishing_model.pkl')
+scaler = joblib.load('model/scaler.pkl')
+
+# Load columns from training data to maintain feature consistency
 df = pd.read_csv('phishing.csv')
 if 'Index' in df.columns:
     df = df.drop(columns=['Index'])
 X = df.drop(columns=['class'])
-y = df['class']
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
 
 def extract_features(url):
     features = {
-        "Parameters":"Satisfied (1 or -1)",
         "UsingIP": check_using_ip(url),
         "LongURL": check_long_url(url),
         "ShortURL": check_short_url(url),
@@ -60,6 +55,9 @@ def extract_features(url):
         "StatsReport": check_stats_report(url)
     }
     return features
+
+# All the feature functions remain unchanged (cut for brevity)
+# Keep your check_using_ip(), check_long_url(), ... etc. as they are in your original code.
 
 # Function to check if a domain is an IP address
 def check_using_ip(url):
@@ -368,6 +366,7 @@ def check_links_pointing_to_page(url):
         print("Error in checking LinksPointingToPage:", e)
         return 0
 
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -377,11 +376,18 @@ def result():
     url = request.form['url']
     features = extract_features(url)
     user_df = pd.DataFrame([features])
+    
+    # Ensure columns are in the same order as training data
     user_df = user_df[X.columns]
+    
+    # Scale and predict
     user_scaled = scaler.transform(user_df)
     prediction = model.predict(user_scaled)
-    result = url+' is not a Phishing Site.' if prediction[0] == 1 else url+'is a Phishing Site'
-    return render_template('index.html', features=features, result=result)
+
+    result_text = f"{url} is not a Phishing Site." if prediction[0] == 1 else f"{url} is a Phishing Site."
+    
+    # ✅ Correct usage
+    return render_template('index.html', features=features, result=result_text)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

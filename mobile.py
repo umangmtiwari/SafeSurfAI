@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import joblib
+import time
 
 chat_id = 958963110
 
@@ -394,26 +395,53 @@ X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, 
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
+
 def main():
-    latest_message = fetch_latest_message()
-    if latest_message:
-        url = latest_message.strip()
-        if url.startswith("http://") or url.startswith("https://"):
-            features = extract_features(url)
-            user_df = pd.DataFrame([features])
-            user_df = user_df[X.columns]
-            user_scaled = scaler.transform(user_df)
-            prediction = model.predict(user_scaled)
-            result = "Go Ahead! "+url+' is not a Phishing Site.' if prediction[0] == 1 else "Stop! "+url+'is a Phishing Site'
-            send_message(chat_id, f"{result}\n\nPrediction: {prediction}\n\nResults: \n {features}\n\n")
-        else:
-            # Check if it's a valid domain name
-            if urlparse(url).netloc:
-                # Prepend "https://" if missing
-                url = "https://" + url
-                send_message(chat_id, f"{result}\n\nPrediction: {prediction}\n\nResults: \n {features}\n\n")
+    while True:
+        # Fetch the latest message from Telegram
+        latest_message = fetch_latest_message()
+
+        if latest_message:
+            url = latest_message.strip()
+
+            # Check if the URL has no scheme (http or https), and prepend https:// if missing
+            if not url.startswith("http://") and not url.startswith("https://"):
+                url = "https://" + url  # Prepending https:// if not present
+
+            # Check if the message is a valid URL
+            if url.startswith("http://") or url.startswith("https://"):
+                features = extract_features(url)
+                user_df = pd.DataFrame([features])
+                user_df = user_df[X.columns]  # Ensure the features match the model's input
+                user_scaled = scaler.transform(user_df)
+                prediction = model.predict(user_scaled)
+
+                # Prepare the result with emojis and formatted message
+                if prediction[0] == 1:
+                    result = f"✅ Go Ahead! {url} is NOT a Phishing Site.\n"
+                else:
+                    result = f"🚨 Stop! {url} is a Phishing Site.\n"
+
+                # Create the features display with proper formatting
+                features_message = "\n\nFeature Evaluation:\n"
+                for feature, value in features.items():
+                    features_message += f"• {feature}: {'✅' if value == 1 else '❌'}\n"
+
+                final_message = f"{result}\nPrediction: {'Safe' if prediction[0] == 1 else 'Phishing'}\n{features_message}"
+
+                # Send the formatted result to the user
+                send_message(chat_id, final_message)
+
             else:
-                send_message(chat_id, "Invalid input. Please provide a valid URL or domain name.")
+                # Handle the case where a valid URL or domain is not provided
+                if urlparse(url).netloc:
+                    url = "https://" + url
+                    send_message(chat_id, f"⚠️ Please provide a full URL starting with `http://` or `https://`.\n\n")
+                else:
+                    send_message(chat_id, "❌ Invalid input. Please provide a valid URL or domain name.")
+
+        # Wait for a few seconds before checking for new messages again
+        time.sleep(5)  # Adjust the sleep time as necessary (in seconds)
 
 if __name__ == "__main__":
     main()

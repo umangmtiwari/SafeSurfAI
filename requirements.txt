@@ -1,0 +1,9 @@
+Flask==1.1.4
+Werkzeug==1.0.1
+requests==2.28.1
+beautifulsoup4==4.12.3
+scikit-learn==1.4.2
+pandas==2.2.1
+joblib==1.4.0
+numpy
+python-whois
