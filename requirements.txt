@@ -8,3 +8,4 @@ joblib==1.4.0
 numpy
 python-whois
 gunicorn
+markupsafe
